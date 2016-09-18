@@ -23,16 +23,14 @@ void Application::startup()
 {  
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   GLfloat vertices[] = {
-    // vertices           //colors
-     0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
-     0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
-    -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
-    -0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 1.0f
+    // Positions          // Colors           // Texture Coords
+     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right
+     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right
+    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f   // Bottom Left
   };
 
-  GLuint indices[] = {  // Note that we start from 0!
-    0, 1, 3,   // First Triangle
-    1, 2, 3    // Second Triangle
+  GLuint indices[] = {
+    0, 1, 2
   };  
 
   char vs_path[] = "./src/shaders/vertex_shader.vs";
@@ -41,24 +39,44 @@ void Application::startup()
 
   glGenBuffers(1, &this->m_vbo);
   glGenBuffers(1, &this->m_ebo);
+  glGenTextures(1, &this->m_texture);
   glGenVertexArrays(1, &this->m_vao);
 
   //init vao
   glBindVertexArray(this->m_vao);
-    //init vbo
+    //bind vbo
     glBindBuffer(GL_ARRAY_BUFFER, this->m_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
+    //bind ebo
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->m_ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     //setup vertex position att
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);  
     //setup vertex color att
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
-
+    //setup vertex texture coords
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
+  //unbind vao
   glBindVertexArray(0); 
+
+  //load textures
+  int width, height;
+  unsigned char* image = SOIL_load_image(
+          "wall.jpg",
+          &width,
+          &height, 
+          0, 
+          SOIL_LOAD_RGB
+  );
+  //bind textures
+  glBindTexture(GL_TEXTURE_2D, this->m_texture); 
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  SOIL_free_image_data(image);
 }
 
 void Application::render()
@@ -66,12 +84,11 @@ void Application::render()
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  GLint xOffsetLocation = glGetUniformLocation(this->m_program, "xOffset");
+  glBindTexture(GL_TEXTURE_2D, this->m_texture);
 
   glUseProgram(this->m_program);
   glBindVertexArray(this->m_vao);
-  glUniform1f(xOffsetLocation, 0.2f);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
   glBindVertexArray(0);
 
   glfwSwapBuffers(GLApplication::get_window());
