@@ -6,6 +6,8 @@
 #include "Application.h"
 #include "iostream"
 
+static float m_mixValue;
+
 GLuint Application::compile_shaders(char *vs_path, char *fs_path)
 {
   Shader vs = Shader(GL_VERTEX_SHADER, vs_path);
@@ -21,16 +23,21 @@ GLuint Application::compile_shaders(char *vs_path, char *fs_path)
 
 void Application::startup()
 {  
-  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  m_mixValue = 0.5f;
+
+  glfwSetKeyCallback(this->get_window(), this->key_callback);
+
   GLfloat vertices[] = {
     // Positions          // Colors           // Texture Coords
      0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right
      0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right
-    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f   // Bottom Left
+    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left
+    -0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   0.0f, 1.0f    // Top Left
   };
 
   GLuint indices[] = {
-    0, 1, 2
+    0, 1, 2,
+    2, 3, 0
   };  
 
   char vs_path[] = "./src/shaders/vertex_shader.vs";
@@ -39,7 +46,8 @@ void Application::startup()
 
   glGenBuffers(1, &this->m_vbo);
   glGenBuffers(1, &this->m_ebo);
-  glGenTextures(1, &this->m_texture);
+  glGenTextures(1, &this->m_texture1);
+  glGenTextures(1, &this->m_texture2);
   glGenVertexArrays(1, &this->m_vao);
 
   //init vao
@@ -64,19 +72,35 @@ void Application::startup()
 
   //load textures
   int width, height;
-  unsigned char* image = SOIL_load_image(
-          "wall.jpg",
+  unsigned char* image1 = SOIL_load_image(
+          "container.jpg",
           &width,
           &height, 
-          0, 
+          0,
           SOIL_LOAD_RGB
   );
   //bind textures
-  glBindTexture(GL_TEXTURE_2D, this->m_texture); 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+  glBindTexture(GL_TEXTURE_2D, this->m_texture1); 
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image1);
   glGenerateMipmap(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, 0);
-  SOIL_free_image_data(image);
+  SOIL_free_image_data(image1);
+
+  unsigned char* image2 = SOIL_load_image(
+          "smile.png",
+          &width,
+          &height, 
+          0,
+          SOIL_LOAD_RGB
+  );
+
+  glBindTexture(GL_TEXTURE_2D, this->m_texture2); 
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image2);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  SOIL_free_image_data(image2);
 }
 
 void Application::render()
@@ -84,12 +108,23 @@ void Application::render()
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  glBindTexture(GL_TEXTURE_2D, this->m_texture);
-
   glUseProgram(this->m_program);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, this->m_texture1);
+  glUniform1i(glGetUniformLocation(this->m_program, "ourTexture1"), 0);
+
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, this->m_texture2);
+  glUniform1i(glGetUniformLocation(this->m_program, "ourTexture2"), 1);
+
+  GLuint mixLocation = glGetUniformLocation(this->m_program, "mixValue");
+  glUniform1f(mixLocation, m_mixValue);
+
   glBindVertexArray(this->m_vao);
-  glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
   glBindVertexArray(0);
+  glBindTexture(GL_TEXTURE_2D, 0);
 
   glfwSwapBuffers(GLApplication::get_window());
   glfwPollEvents();
@@ -104,3 +139,32 @@ void Application::shutdown()
   
   glfwTerminate();
 }
+
+void incrementMixValue()
+{
+    if (m_mixValue < 1.f)
+    {
+      m_mixValue += 0.01f;
+    }
+}
+
+void decrementMixValue()
+{
+    if (m_mixValue > 0.f)
+    {
+      m_mixValue -= 0.01f;
+    }
+}
+
+void Application::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{  
+  if (key == GLFW_KEY_UP)
+  {
+    incrementMixValue();
+  }
+  else if (key == GLFW_KEY_DOWN)
+  {
+    decrementMixValue();
+  }
+}
+
