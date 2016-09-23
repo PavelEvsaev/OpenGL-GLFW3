@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <SOIL/SOIL.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Shader.h"
 #include "Application.h"
 #include "iostream"
-
-static float m_mixValue;
 
 GLuint Application::compile_shaders(char *vs_path, char *fs_path)
 {
@@ -23,10 +25,6 @@ GLuint Application::compile_shaders(char *vs_path, char *fs_path)
 
 void Application::startup()
 {  
-  m_mixValue = 0.5f;
-
-  glfwSetKeyCallback(this->get_window(), this->key_callback);
-
   GLfloat vertices[] = {
     // Positions          // Colors           // Texture Coords
      0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right
@@ -118,9 +116,13 @@ void Application::render()
   glBindTexture(GL_TEXTURE_2D, this->m_texture2);
   glUniform1i(glGetUniformLocation(this->m_program, "ourTexture2"), 1);
 
-  GLuint mixLocation = glGetUniformLocation(this->m_program, "mixValue");
-  glUniform1f(mixLocation, m_mixValue);
+  glm::mat4 transform;
+  transform = glm::rotate(transform, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.0f));
 
+  GLint transformLoc = glGetUniformLocation(this->m_program, "transform");
+  glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+        
   glBindVertexArray(this->m_vao);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
   glBindVertexArray(0);
@@ -139,32 +141,3 @@ void Application::shutdown()
   
   glfwTerminate();
 }
-
-void incrementMixValue()
-{
-    if (m_mixValue < 1.f)
-    {
-      m_mixValue += 0.01f;
-    }
-}
-
-void decrementMixValue()
-{
-    if (m_mixValue > 0.f)
-    {
-      m_mixValue -= 0.01f;
-    }
-}
-
-void Application::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{  
-  if (key == GLFW_KEY_UP)
-  {
-    incrementMixValue();
-  }
-  else if (key == GLFW_KEY_DOWN)
-  {
-    decrementMixValue();
-  }
-}
-
