@@ -26,25 +26,24 @@ void GLApplication::init_glew()
   }
 }
 
-GLFWwindow* GLApplication::create_main_window(int w, int h)
+void GLApplication::init_window(int w, int h)
 {
-  GLFWwindow *window = glfwCreateWindow(w, h, "OpenGL", NULL, NULL);
+  m_window = glfwCreateWindow(w, h, "OpenGL", NULL, NULL);
+  glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);  
 
-  if(!window)
+  if(!m_window)
   {
     glfwTerminate();
     exit(EXIT_FAILURE);
   }
-  return window;
+
+  glfwMakeContextCurrent(m_window);
 }
 
 GLApplication::GLApplication(int w, int h)
 {
   init_glfw();
-
-  m_window = create_main_window(w, h);
-  glfwMakeContextCurrent(m_window);
-
+  init_window(w, h);
   init_glew();
 }
 
@@ -57,7 +56,7 @@ void GLApplication::run()
 {
   this->startup();
 
-  while(!glfwWindowShouldClose(m_window))
+  while(!glfwWindowShouldClose(this->m_window))
   {
     this->render();
   }
@@ -70,12 +69,25 @@ GLFWwindow* GLApplication::get_window() const
   return m_window;
 }
 
+int GLApplication::get_window_height()
+{
+  int width, height;
+  glfwGetWindowSize(this->m_window, &width, &height);
+  return height;
+}
+
+int GLApplication::get_window_width()
+{
+  int width, height;
+  glfwGetWindowSize(this->m_window, &width, &height);
+  return width;
+}
+
 void GLApplication::render() 
 {
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
-
-  glfwSwapBuffers(m_window);
+  glfwSwapBuffers(this->m_window);
   glfwPollEvents();
 }
 
