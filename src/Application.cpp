@@ -205,6 +205,8 @@ void Application::shutdown()
 
 void Application::do_camera_movement()
 {
+    camera.update_position(deltaTime);
+
     if(keys[GLFW_KEY_W])
         camera.process_keyboard(FORWARD, deltaTime);
     if(keys[GLFW_KEY_S])
@@ -213,6 +215,8 @@ void Application::do_camera_movement()
         camera.process_keyboard(LEFT, deltaTime);
     if(keys[GLFW_KEY_D])
         camera.process_keyboard(RIGHT, deltaTime);
+    if(keys[GLFW_KEY_SPACE])
+        camera.process_keyboard(UP, deltaTime);
 }
 
 void Application::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -237,7 +241,7 @@ void Application::key_callback(GLFWwindow* window, int key, int scancode, int ac
 
 void Application::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-  if(firstMouse)
+    if(firstMouse)
     {
         lastX = xpos;
         lastY = ypos;

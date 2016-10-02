@@ -10,6 +10,7 @@ glm::mat4 Camera::get_view_matrix()
 void Camera::process_keyboard(Camera_Movement direction, GLfloat deltaTime)
 {
     GLfloat velocity = this->movement_speed * deltaTime;
+
     if (direction == FORWARD)
         this->position += this->front * velocity;
     if (direction == BACKWARD)
@@ -19,7 +20,25 @@ void Camera::process_keyboard(Camera_Movement direction, GLfloat deltaTime)
     if (direction == RIGHT)
         this->position += this->right * velocity;
 
-    this->position.y = 0.0;
+    //jumps test
+    if (direction == UP && this->upSpeed == 0.f)
+        this->upSpeed = 1.f;
+}
+
+void Camera::update_position(GLfloat deltaTime)
+{   
+    GLfloat velocity = this->movement_speed * deltaTime;
+
+    this->position.y += this->upSpeed * velocity;
+
+    if (this->position.y > 0.f)
+    {
+        this->upSpeed += this->gravity.y * velocity;
+    }
+    else 
+    {
+        this->upSpeed = 0;
+    }
 }
 
 // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -28,7 +47,7 @@ void Camera::process_mouse_movement(GLfloat xoffset, GLfloat yoffset, GLboolean 
     xoffset *= this->mouse_sensitivity;
     yoffset *= this->mouse_sensitivity;
 
-    this->yaw   += xoffset;
+    this->yaw += xoffset;
     this->pitch += yoffset;
 
     // Make sure that when pitch is out of bounds, screen doesn't get flipped
@@ -58,9 +77,9 @@ void Camera::update_camera_vectors()
 {
     // Calculate the new front vector
     glm::vec3 front;
-    front.x = cos(glm::radians(this->yaw)) * cos(glm::radians(this->pitch));
+    front.x = sin(glm::radians(this->yaw)) * cos(glm::radians(this->pitch));
     front.y = sin(glm::radians(this->pitch));
-    front.z = sin(glm::radians(this->yaw)) * cos(glm::radians(this->pitch));
+    front.z = -cos(glm::radians(this->yaw)) * cos(glm::radians(this->pitch));
     this->front = glm::normalize(front);
     // Also re-calculate the right and up vector
     this->right = glm::normalize(glm::cross(this->front, this->world_up));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
