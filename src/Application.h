@@ -1,29 +1,32 @@
 #pragma once
 
+#include "Program.h"
+#include "Camera.h"
 #include "GLApplication.h"
 
 class Application : public GLApplication
 {
 private:
-	GLuint m_vao;
 	GLuint m_vbo;
-	GLuint m_texture;
-	GLuint m_program;
-	
-	GLuint compile_shaders(char *, char *);
+	GLuint m_cube_vao;
+	GLuint m_light_vao;
+
+	Camera *camera;
+	Program *m_cube_program;
+	Program *m_light_program;
+
 	void do_camera_movement();
 
 protected:
-  	void render() override;
+  	void render(GLfloat time) override;
   	void startup() override;
   	void shutdown() override;
 
-  	//callbacks
-  	void init_callbacks();
-  	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-  	static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-  	static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+  	void on_key_callback(int key, int scancode, int action, int mods) override;
+  	void on_scroll_callback(double xoffset, double yoffset) override;
+  	void on_mouse_callback(double xpos, double ypos) override;
 
 public:
 	Application();
+	~Application();
 };

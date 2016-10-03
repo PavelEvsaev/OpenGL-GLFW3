@@ -17,7 +17,7 @@ INCLUDE_PATHS = -I/usr/local/include
 LIBRARY_PATHS = -L/usr/local/lib
 
 #Flags
-CFLAGS = -Wno-deprecated -std=c++11
+CFLAGS = -Wno-deprecated -std=c++11 -v
 CC = g++
 
 #Testing for OS X v Linux

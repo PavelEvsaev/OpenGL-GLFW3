@@ -4,18 +4,16 @@
 
 class Shader
 {
-  public:
+public:
+    Shader(GLenum shader_type, char* shader_location);
 
-    Shader(GLenum shaderType, char* shaderLocation);
-
-    GLuint getHandle();
+    GLuint get_handle();
     GLint status();
 
-    void attachTo(GLuint programId);
-    void detachFrom(GLuint programId);
-    
-  private:
+    void attach_to(GLuint program_id);
+	void mark_to_delete();
 
+private:
     GLuint m_handle;
-    void logError(char*);
+    void log_error(char*);
 };

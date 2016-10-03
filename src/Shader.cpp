@@ -31,10 +31,12 @@ Shader::Shader(GLenum type, char* location)
   glCompileShader(m_handle);
 
   if (status() == GL_FALSE)
-    logError(location);
+  {
+    log_error(location);
+  }
 }
 
-GLuint Shader::getHandle()
+GLuint Shader::get_handle()
 {
   return m_handle;
 }
@@ -47,18 +49,17 @@ GLint Shader::status()
   return status;
 }
 
-void Shader::attachTo(GLuint programId)
+void Shader::attach_to(GLuint programId)
 {
   glAttachShader(programId, m_handle);
 }
 
-void Shader::detachFrom(GLuint programId)
+void Shader::mark_to_delete()
 {
-  glDetachShader(programId, m_handle);
   glDeleteShader(m_handle);
 }
 
-void Shader::logError(char* location)
+void Shader::log_error(char* location)
 {
   GLint infoLogLength;
   glGetShaderiv(m_handle, GL_INFO_LOG_LENGTH, &infoLogLength);
