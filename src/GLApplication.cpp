@@ -68,12 +68,16 @@ void GLApplication::run(GLApplication *the_app)
 {
   current_app = the_app;
 
+  GLfloat last_time_render = 0.0f;
+  GLfloat current_time = 0.0f;
+
   this->startup();
 
   while(!glfwWindowShouldClose(this->m_window))
   {
-    GLfloat time = glfwGetTime();
-    this->render(time);
+    current_time = glfwGetTime();
+    this->render(current_time, last_time_render);
+    last_time_render = current_time;
   }
 
   this->shutdown();
@@ -83,7 +87,7 @@ void GLApplication::startup()
 {  
 }
 
-void GLApplication::render(GLfloat time)
+void GLApplication::render(GLfloat cur_time, GLfloat last_time_render)
 {
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
@@ -116,9 +120,22 @@ int GLApplication::get_window_width()
 
 void GLApplication::on_key_callback(int key, int scancode, int action, int mods)
 {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(this->get_window(), GL_TRUE);
+    }
+
+    if (action == GLFW_PRESS)
+    {
+        this->pressed_keys[key] = true;
+    }
+    else if (action == GLFW_RELEASE)
+    {
+        this->pressed_keys[key] = false;
+    }
 }
 
-void GLApplication::on_mouse_callback(double xpos, double ypos)
+void GLApplication::on_mouse_callback(double xpos, double ypos, float dx, float dy)
 {
 }
 
@@ -133,7 +150,24 @@ void GLApplication::key_callback(GLFWwindow* window, int key, int scancode, int 
 
 void GLApplication::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    current_app->on_mouse_callback(xpos, ypos);
+    static bool firstMouse = true;
+    static double lastX = 0.f;
+    static double lastY = 0.f;
+
+    if(firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+    
+    lastX = xpos;
+    lastY = ypos;
+
+    current_app->on_mouse_callback(xpos, ypos, xoffset, yoffset);
 }
 
 void GLApplication::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)

@@ -9,15 +9,6 @@
 #include "Application.h"
 #include "iostream"
 
-double lastX = 0.f;
-double lastY = 0.f;
-
-bool firstMouse = true;
-bool keys[1024];
-
-GLfloat deltaTime = 0.0f;
-GLfloat lastFrame = 0.0f;
-
 Application::Application() : GLApplication() 
 {
   char cube_vs_path[] = "./src/shaders/cube.vs";
@@ -112,7 +103,6 @@ void Application::startup()
     glEnableVertexAttribArray(0);
   glBindVertexArray(0);
 
-
   int width, height;
   unsigned char* image;
   image = SOIL_load_image("container.png", &width, &height, 0, SOIL_LOAD_RGB);
@@ -140,20 +130,18 @@ void Application::startup()
   SOIL_free_image_data(image);
 }
 
-void Application::render(GLfloat time)
+void Application::render(GLfloat cur_time, GLfloat last_time_render)
 {
-  deltaTime = time - lastFrame;
-  lastFrame = time;
-
-  this->do_camera_movement();
+  this->do_camera_movement(cur_time - last_time_render);
 
   glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  float light_x = sin(time) * 5;
-  float light_y = sin(time) * 5;
-  float light_z = cos(time) * 5;
-  glm::vec3 light_pos(glm::vec3(light_x, light_y, light_z));
+  float radius = 5.f;
+  float light_x = sin(cur_time);
+  float light_y = sin(cur_time);
+  float light_z = cos(cur_time);
+  glm::vec3 light_pos(radius * glm::vec3(light_x, light_y, light_z));
 
   this->m_cube_program->use();
   GLuint cur_program = this->m_cube_program->get_handle();
@@ -161,28 +149,30 @@ void Application::render(GLfloat time)
   glm::mat4 model;
   glm::mat4 view = this->camera->get_view_matrix();
   glm::mat4 projection = glm::perspective(camera->zoom, (float) (this->get_window_width() / this->get_window_height()), 0.1f, 100.0f);
+  glm::mat3 normal = glm::mat3(glm::transpose(glm::inverse(model)));
+  glm::mat4 mvp = projection * view * model;
 
-  glUniformMatrix4fv(glGetUniformLocation(cur_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-  glUniformMatrix4fv(glGetUniformLocation(cur_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-  glUniformMatrix4fv(glGetUniformLocation(cur_program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+  glUniformMatrix3fv(glGetUniformLocation(cur_program, "normalMatrix"), 1, GL_FALSE, glm::value_ptr(normal));
+  glUniformMatrix4fv(glGetUniformLocation(cur_program, "modelMatrix"), 1, GL_FALSE, glm::value_ptr(model));
+  glUniformMatrix4fv(glGetUniformLocation(cur_program, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
 
-  glUniform3f(glGetUniformLocation(cur_program, "viewPos"),  this->camera->position.x, this->camera->position.y, this->camera->position.z);
-  
   glUniform1i(glGetUniformLocation(cur_program, "material.diffuse"),  0);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, this->m_deffuse_texture);
-
   glUniform1i(glGetUniformLocation(cur_program, "material.specular"), 1);
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, this->m_specular_texture);
-
   glUniform3f(glGetUniformLocation(cur_program, "material.specular"), 0.5f, 0.5f, 0.5f);
   glUniform1f(glGetUniformLocation(cur_program, "material.shininess"), 32.0f);
 
-  glUniform3f(glGetUniformLocation(cur_program, "light.position"),  light_pos.x, light_pos.y, light_pos.z);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, this->m_deffuse_texture);
+
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, this->m_specular_texture);
+  
+  glUniform3f(glGetUniformLocation(cur_program, "light.position"), light_pos.x, light_pos.y, light_pos.z);
   glUniform3f(glGetUniformLocation(cur_program, "light.ambient"),  0.2f, 0.2f, 0.2f);
   glUniform3f(glGetUniformLocation(cur_program, "light.diffuse"),  0.5f, 0.5f, 0.5f);
   glUniform3f(glGetUniformLocation(cur_program, "light.specular"), 1.0f, 1.0f, 1.0f);
+
+  glUniform3f(glGetUniformLocation(cur_program, "viewPos"),  this->camera->position.x, this->camera->position.y, this->camera->position.z);
 
   glBindVertexArray(this->m_cube_vao);
   glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -194,10 +184,9 @@ void Application::render(GLfloat time)
 
   model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
   model = glm::translate(model, light_pos);
+  mvp = projection * view * model;
 
-  glUniformMatrix4fv(glGetUniformLocation(cur_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-  glUniformMatrix4fv(glGetUniformLocation(cur_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-  glUniformMatrix4fv(glGetUniformLocation(cur_program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+  glUniformMatrix4fv(glGetUniformLocation(cur_program, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
 
   glBindVertexArray(this->m_light_vao);
   glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -215,58 +204,25 @@ void Application::shutdown()
     glDeleteBuffers(1, &this->m_vbo);
 }
 
-void Application::do_camera_movement()
+void Application::do_camera_movement(GLfloat delta_time)
 {
-    camera->update_position(deltaTime);
+    this->camera->update_position(delta_time);
 
-    if(keys[GLFW_KEY_W])
-        camera->process_keyboard(FORWARD, deltaTime);
-    if(keys[GLFW_KEY_S])
-        camera->process_keyboard(BACKWARD, deltaTime);
-    if(keys[GLFW_KEY_A])
-        camera->process_keyboard(LEFT, deltaTime);
-    if(keys[GLFW_KEY_D])
-        camera->process_keyboard(RIGHT, deltaTime);
-    if(keys[GLFW_KEY_SPACE])
-        camera->process_keyboard(UP, deltaTime);
+    if(this->pressed_keys[GLFW_KEY_W])
+        this->camera->process_keyboard(FORWARD, delta_time);
+    if(this->pressed_keys[GLFW_KEY_S])
+        this->camera->process_keyboard(BACKWARD, delta_time);
+    if(this->pressed_keys[GLFW_KEY_A])
+        this->camera->process_keyboard(LEFT, delta_time);
+    if(this->pressed_keys[GLFW_KEY_D])
+        this->camera->process_keyboard(RIGHT, delta_time);
+    if(this->pressed_keys[GLFW_KEY_SPACE])
+        this->camera->process_keyboard(UP, delta_time);
 }
 
-void Application::on_key_callback(int key, int scancode, int action, int mods)
+void Application::on_mouse_callback(double xpos, double ypos, float dx, float dy)
 {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(this->get_window(), GL_TRUE);
-    }
-
-    if (key >= 0 && key < 1024)
-    {
-        if (action == GLFW_PRESS)
-        {
-            keys[key] = true;
-        }
-        else if (action == GLFW_RELEASE)
-        {
-            keys[key] = false;
-        }
-    }
-}
-
-void Application::on_mouse_callback(double xpos, double ypos)
-{
-    if(firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    GLfloat xoffset = xpos - lastX;
-    GLfloat yoffset = lastY - ypos;
-    
-    lastX = xpos;
-    lastY = ypos;
-
-    camera->process_mouse_movement(xoffset, yoffset);
+    camera->process_mouse_movement(dx, dy);
 }
 
 void Application::on_scroll_callback(double xoffset, double yoffset)

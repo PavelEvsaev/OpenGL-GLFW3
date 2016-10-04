@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <map>
 
 class GLApplication
 {
@@ -29,16 +30,18 @@ public:
 protected:
 
   GLFWwindow* get_window() const;
+  std::map<int, bool> pressed_keys;
+
   int get_window_height();
   int get_window_width();
 
   //application lifecycle
-  virtual void render(GLfloat time);
+  virtual void render(GLfloat cur_time, GLfloat last_time_render);
   virtual void startup();
   virtual void shutdown();
 
   //application callbacks
   virtual void on_key_callback(int key, int scancode, int action, int mods);
   virtual void on_scroll_callback(double xoffset, double yoffset);
-  virtual void on_mouse_callback(double xpos, double ypos);
+  virtual void on_mouse_callback(double xpos, double ypos, float dx, float dy);
 };
