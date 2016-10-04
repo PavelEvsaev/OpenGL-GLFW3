@@ -11,6 +11,9 @@ private:
 	GLuint m_cube_vao;
 	GLuint m_light_vao;
 
+	GLuint m_deffuse_texture;
+	GLuint m_specular_texture;
+
 	Camera *camera;
 	Program *m_cube_program;
 	Program *m_light_program;
