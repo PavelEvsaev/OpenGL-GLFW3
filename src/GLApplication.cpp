@@ -20,14 +20,16 @@ GLApplication::~GLApplication()
 
 void GLApplication::init_glfw()
 {
+  glfwSetErrorCallback(error_callback);
+
   if (!glfwInit())
   {
     fprintf(stderr, "Failed initialize GLFW.");
     exit(EXIT_FAILURE);
   }
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 }
@@ -173,4 +175,9 @@ void GLApplication::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void GLApplication::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     current_app->on_scroll_callback(xoffset, yoffset);
+}
+
+void GLApplication::error_callback(int error, const char* description)
+{
+    fprintf(stderr, "Error: %s\n", description);
 }
