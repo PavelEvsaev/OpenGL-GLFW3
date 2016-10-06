@@ -1,19 +1,21 @@
 #pragma once
 
-#include <GL/glew.h>
+#include "IGLErrorPrint.h"
 
-class Shader
+class Shader : IGLErrorPrint
 {
+private:
+    GLuint m_handle;
+
 public:
     Shader(GLenum shader_type, char* shader_location);
 
     GLuint get_handle();
-    GLint status();
 
     void attach_to(GLuint program_id);
 	void mark_to_delete();
 
 private:
-    GLuint m_handle;
-    void log_error(char*);
+    GLint get_status() override;
+    void print_error(char *) override;
 };

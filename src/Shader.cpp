@@ -1,5 +1,4 @@
 #include "Shader.h"
-#include "stdio.h"
 #include "stdlib.h"
 
 char* fileToBuffer(char *file)
@@ -30,9 +29,9 @@ Shader::Shader(GLenum type, char* location)
   glShaderSource(m_handle, 1, (const GLchar**)&src, NULL);
   glCompileShader(m_handle);
 
-  if (status() == GL_FALSE)
+  if (get_status() == GL_FALSE)
   {
-    log_error(location);
+    print_error(location);
   }
 }
 
@@ -41,7 +40,7 @@ GLuint Shader::get_handle()
   return m_handle;
 }
 
-GLint Shader::status()
+GLint Shader::get_status()
 {
   GLint status;
   glGetShaderiv(m_handle, GL_COMPILE_STATUS, &status);
@@ -59,14 +58,14 @@ void Shader::mark_to_delete()
   glDeleteShader(m_handle);
 }
 
-void Shader::log_error(char* location)
+void Shader::print_error(char* info)
 {
-  GLint infoLogLength;
-  glGetShaderiv(m_handle, GL_INFO_LOG_LENGTH, &infoLogLength);
+  GLint log_length;
+  glGetShaderiv(m_handle, GL_INFO_LOG_LENGTH, &log_length);
 
-  GLchar *strInfoLog = new GLchar[infoLogLength + 1];
-  glGetShaderInfoLog(m_handle, infoLogLength, NULL, strInfoLog);
+  GLchar *log = new GLchar[log_length + 1];
+  glGetShaderInfoLog(m_handle, log_length, NULL, log);
 
-  fprintf(stderr, "Shader Compile failure in %s:\n%s\n", location, strInfoLog);
-  delete[] strInfoLog;
+  fprintf(stderr, "Shader Compile failure in %s:\n%s\n", info, log);
+  delete[] log;
 }
