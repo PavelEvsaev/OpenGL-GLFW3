@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IGLErrorPrint.h"
+#include <iostream>
 
 class Shader : IGLErrorPrint
 {
@@ -9,7 +10,7 @@ private:
 
 public:
     Shader(GLenum shader_type, char* shader_location);
-
+        
     GLuint get_handle();
 
     void attach_to(GLuint program_id);

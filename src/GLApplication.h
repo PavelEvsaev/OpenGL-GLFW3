@@ -6,9 +6,8 @@
 class GLApplication
 {
 private:
-
+  
   static GLApplication *current_app;
-
   GLFWwindow* m_window;
 
   void init_glfw();

@@ -41,7 +41,7 @@ void Program::print_error(char *info)
 }
 
 Program::~Program()
-{
+{	
 	glDeleteProgram(this->m_handle);
 	delete this->m_vs;
 	delete this->m_fs;

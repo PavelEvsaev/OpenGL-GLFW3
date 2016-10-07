@@ -48,7 +48,8 @@ void GLApplication::init_glew()
 void GLApplication::init_window(int w, int h)
 {
   m_window = glfwCreateWindow(w, h, "OpenGL", NULL, NULL);
-  glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);  
+  glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+  glViewport(0, 0, w, h);  
 
   if(!m_window)
   {

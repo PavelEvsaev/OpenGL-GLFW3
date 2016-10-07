@@ -21,7 +21,7 @@ CFLAGS = -Wno-deprecated -std=c++11
 CC = g++
 
 #Testing for OS X v Linux
-LIBS = -framework OpenGL -lglfw3 -lglew -lSOIL
+LIBS = -framework OpenGL -lglfw3 -lglew -lSOIL -lassimp
 
 SOURCES = $(wildcard $(SRC_DIR)/*.$(SRC_EXT))
 OBJECTS = $(SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/%.$(OBJ_EXT))
