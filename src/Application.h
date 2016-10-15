@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "Camera.h"
-#include "Model.h"
+#include "Program.h"
 #include "GLApplication.h"
 
 class Application : public GLApplication
@@ -11,7 +11,6 @@ class Application : public GLApplication
 private:
 	std::shared_ptr<Program> m_program;
 	std::shared_ptr<Camera> m_camera;
-	std::shared_ptr<Model> m_model;
 
 	void do_camera_movement(GLfloat delta_time);
 

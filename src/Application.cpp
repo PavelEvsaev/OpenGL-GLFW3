@@ -15,7 +15,6 @@ Application::Application() : GLApplication()
 
   this->m_program = std::make_shared<Program>(vs_path, fs_path);
   this->m_camera = std::make_shared<Camera>(glm::vec3(0.f, 0.f, 3.f));
-  this->m_model = std::make_shared<Model>("./src/model/nanosuit.obj");
 }
 
 void Application::startup()
@@ -61,8 +60,6 @@ void Application::render(GLfloat cur_time, GLfloat last_time_render)
   glUniform1f(glGetUniformLocation(program_id, "light.constant"),  1.0f);
   glUniform1f(glGetUniformLocation(program_id, "light.linear"),    0.09);
   glUniform1f(glGetUniformLocation(program_id, "light.quadratic"), 0.032);
-
-  this->m_model->draw(this->m_program);
 
   glfwSwapBuffers(this->get_window());
 }
